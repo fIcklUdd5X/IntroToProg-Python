@@ -1,0 +1,302 @@
+# python 3
+
+# Assignment_06_Stefan Lund
+#-------------------------------------------------#
+
+#-- Data --#
+# declare variables and constants
+# objFile = An object that represents a file
+# strData = A row of text data from the file
+# dicRow = A row of data separated into elements of a dictionary {Task,Priority}
+# lstTable = A dictionary that acts as a 'table' of rows
+# strMenu = A menu of user options
+# strChoice = Capture the user option selection
+
+#-- Input/Output --#
+# User can see a Menu (Step 2)
+# User can see data (Step 3)
+# User can insert or delete data(Step 4 and 5)
+# User can save to file (Step 6)
+
+#-- Processing --#
+# Step 1
+# When the program starts, load the any data you have
+# in a text file called ToDo_.txt into a python Dictionary.
+
+# Step 2
+# Display a menu of choices to the user
+
+# Step 3
+# Display all todo_ items to user
+
+# Step 4
+# Add a new item to the list/Table
+
+# Step 5
+# Remove a new item to the list/Table
+
+# Step 6
+# Save tasks to the ToDo_.txt file
+
+# Step 7
+# Exit program
+#-------------------------------
+
+# objFileName = "C:\_PythonClass\Todo_.txt"
+# objFileName = "C:\\Users\\Stefan\\Python_Files\\UW_Python\\Mod_1_05\\Todo_.txt"
+# strData = ""
+# dicRow = {}
+# lstTable = []
+
+#-- Processing --#
+# Step 1
+# When the program starts, load the any data you have       - read_file(file_direct)
+# in a text file called ToDo_.txt into a python Dictionary.  - data_to_dictionary(data, sep, , lstTable={})
+
+import sys
+
+
+def read_file(file_direct):
+    """
+        input file is (new line) '\n' delimited
+        mode is (read) 'r'
+        returns read_data, a list of strings of Task-Priority pairs, each 'Task,Priority' pair is ',' delimited
+    '"""
+
+    try:
+        with open(file_direct, 'r') as f:
+            read_data = f.read()
+        read_data = read_data.splitlines()
+        return read_data
+    except: # catch all - not good but the best I can come up with for the moment.
+            # if 'FileNotFoundError' == str(e).split("'")[1]:  Not a problem. File created when saved.
+        e = sys.exc_info()[0]
+        print("<p>Error: {}</p>".format(e))
+
+
+def data_to_dictionary(data, sep):
+    """
+
+    :param data: list containing strings of Task-Priority pairs, each 'Task,Priority' pair is ',' delimited
+    :param sep: separator, here set to ' , ' but is a variable so could be anything
+    :param lstTable: dictionary , {key:list[values]}, here {Priority:list[Task(s)]}
+               {Priority1:list[Task1, Task2 ...], Priority2:list[Task3, Task4 ...]}
+    :return: lstTable
+    """
+    lstTable = {}
+    if data is None: # if the ToDo_ file doesn't exist. could write as a try - except
+        lstTable = lstTable
+    else:
+        for line in data:
+            # key = Task, value = Priority
+            key, value = line.split(sep)
+            key, value = key.strip(), value.strip()
+
+            # Switch! key  = Priority, value = Task.
+            #  Think dict[key = high] = ['Pay Bills', 'Wedding Anniversary', 'Homework Due']
+            if value in lstTable:
+                lstTable[value].append(key)
+            else:
+                lstTable[value] = [key]
+
+    return lstTable
+
+
+# Step 2 - Display a menu of choices to the user
+
+def menu_options(prnt=1):
+    """
+    options menue is a dictionary with int keys and lists of options to print and corresponding functions
+    :param prnt: if not given or set to 1 prints the options menue
+    :return: returns the options menue
+    """
+
+    menu_dict =  {1: ['Show current data', display_data],
+                  2: ['Add a new item', add_item],
+                  3: ['Remove an existing item', remove_from_data],
+                  4: ['Save Data to File', save_to_file],
+                  5: ['Exit Program', exit]}
+
+    if prnt == 1:
+        print("\nMenu of Options:")
+        for key in menu_dict:
+            print(key, ')  ', menu_dict[key][0])
+    return menu_dict
+
+
+def menu():
+    """
+        displays options available.
+        uses exception_catcher() to verify user input is a valid choice.
+        return:  choice made from available options, strChoice is int 1 - 5.
+    """
+
+    menu_dict = menu_options()
+
+    valid_args = tuple(menu_dict.keys())
+    valid_args_str = [str(item) for item in valid_args]
+    print_arg_1 = None
+    print_arg_2 = ("\nWhich option would you like to perform? [{} to {}]: ".
+                   format(valid_args[0], valid_args[len(valid_args) - 1]))
+
+    strChoice = exception_catcher(valid_args_str, print_arg_1, print_arg_2)
+    print('\nYour choice: \n{} )  {}\n'.format(strChoice, menu_dict[int(strChoice)][0]))
+    return strChoice
+
+# Step 3
+# Display all todo_ items to user
+
+
+def display_data(data):
+    """
+    displays information currently ready
+    :param data: dictionary; key = urgency, list of tasks
+    :return: none
+    """
+    print('{:10}  :    {}\n{}'.format('Priority', 'Task', '-' * 30))
+    for key in data:
+        for item in data[key]:
+            if item is None:
+                print('{:10}  :    {}'.format(key, None))
+            else:
+                print('{:10}  :    {}'.format(key, item))
+
+
+def exception_catcher(valid_args, print_arg_1=None, print_arg_2=None):
+    """
+
+    :param valid_args: string format
+                        from menu(), list of digits in string format
+                        from add_item(), for the moment only the separator can be verified
+    :param print_arg_1: string printed to screen
+    :param print_arg_2: string used with the input() function
+    :return: in_put, verified user input
+
+    Set out to create a catch all function. Don't think it's a good idea. Too many moving parts.
+    """
+
+    import string
+    valid_choice = False
+    while not valid_choice:
+        if print_arg_1 is not None:
+            print(print_arg_1)
+        if print_arg_2 is not None:
+            in_put = input(print_arg_2)
+            if ''.join(char for char in valid_args) in string.digits:
+                if in_put in valid_args:
+                    in_put = int(in_put)
+                    valid_choice = True
+                else:
+                    print("Enter a digit, {} - {}".
+                          format(in_put, valid_args[0], valid_args[len(valid_args) - 1]))
+
+            elif ''.join(char for char in valid_args) in string.punctuation:
+                if valid_args in in_put:
+                    valid_choice = True
+                else:
+                    print('You forgot the {}'.format(valid_args))
+
+            else:
+                print("Add another elif selection to catch this input.")
+                pass
+    return str(in_put)
+
+
+# Step 4 - Add a new item to the list/Table
+
+def add_item(data):
+    """
+    add new item to current
+    :param data:  dictionary; key = urgency, list of tasks
+    :return: data dictionary
+    """
+
+    valid_args = ","
+    print_arg_1 = 'Enter an activity and its urgency. \n' \
+                  'Use the comma "," to separate the activity from the urgency.\n\n'
+    print_arg_2 = 'Enter "activity" "," "urgency" and then "Enter": '
+    str_user_input = exception_catcher(valid_args, print_arg_1, print_arg_2)
+    add_dicRow = data_to_dict_of_lines([str_user_input], ',')
+    new_data = dict_of_line_to_table_of_rows(add_dicRow, data)
+    data = new_data
+    return data
+
+# Step 5 - Remove a new item to the list/Table
+
+def remove_from_data(data):
+
+    usr_input = input("Enter activity you want to remove: ")
+    for key in data.keys():
+        value_list_lower = [value.lower() for value in data[key]]
+        if usr_input.lower() in value_list_lower:
+            indx = value_list_lower.index(usr_input.lower())
+            print("Found {} entered as: {}". format(usr_input, [key][indx]))
+        if usr_input.lower() not in value_list_lower:
+            print("Nothing found entered as: {}". format(usr_input))
+        if usr_input in data[key]:
+            data[key].remove(usr_input)
+            if usr_input in data[key]:
+                print("Item is entered more than once as {}. To remove next one, enter 3 again.". format(usr_input))
+
+    for key, value in data.items():
+        if data[key] is not []:
+            data[key] = value
+    return data
+
+# Step 6 - Save tasks to the txt file named ToDo_.txt
+
+def save_to_file(data, file_address):
+    """
+    'w' for only writing, existing file with the same name will be erased
+    if file doesn't exist, it will be created
+
+    """
+
+    print("Saving data to file.")
+    with open(file_address, 'w') as file_object:
+        for key, value in data.items():
+            for item in data[key]:
+                str_write = item + ',' + key + '\n'
+                file_object.write(str_write)
+    print("file object closed? : ", file_object.closed)
+    return data
+
+# elif (strChoice == '5'):
+#     break #and Exit the program
+
+def exit(data, path):
+    # save data to file before Exit?
+    save_to_file(data, path)
+    return False
+
+# Data
+def run_asmt_6(file_path):
+    """
+    function putting the other function together to operate as desired. needs to be changed if more
+        alternatives are added to the menu
+    :param file_path: path to the ToDo.txt
+    """
+    fd = read_file(file_path)
+    separator = ','
+    data = data_to_dictionary(fd, separator)
+
+    do_dict = menu_options(0)
+
+    temp = True
+    while temp:
+
+        choice = menu()  # choice receives a number 1 to 5 in str format
+        if choice == '1' or choice == '2' or choice == '3':
+            do = do_dict[int(choice)][1](data)
+        elif choice == '4':
+            do = do_dict[int(choice)][1](data, file_path)
+        elif choice == '5':
+            temp = do_dict[int(choice)][1](data, file_path)
+        else:
+            print('Problem at "choice = menu()".')
+
+
+file_location = "C:\\Users\\Stefan\\Python_Files\\UW_Python\\Mod_1_06\\ToDo.txt"
+run_asmt_6(file_location)
+
+print('Finished')
